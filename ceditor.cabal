@@ -1,0 +1,75 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 67aa8dc482bcf52b05aec1d3702602b7ec71e89e82c2bd2ec587e237032f579d
+
+name:           ceditor
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/githubuser/ceditor#readme>
+homepage:       https://github.com/githubuser/ceditor#readme
+bug-reports:    https://github.com/githubuser/ceditor/issues
+author:         Vadim Mostovoy
+maintainer:     example@example.com
+copyright:      2021 VM's
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/githubuser/ceditor
+
+library
+  exposed-modules:
+      Lib
+      Modifiers
+  other-modules:
+      Paths_ceditor
+  hs-source-dirs:
+      src
+  build-depends:
+      JuicyPixels
+    , base >=4.7 && <5
+    , binary
+    , bytestring
+    , directory
+  default-language: Haskell2010
+
+executable ceditor-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_ceditor
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      JuicyPixels
+    , base >=4.7 && <5
+    , binary
+    , bytestring
+    , ceditor
+    , directory
+  default-language: Haskell2010
+
+test-suite ceditor-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_ceditor
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      JuicyPixels
+    , base >=4.7 && <5
+    , binary
+    , bytestring
+    , ceditor
+    , directory
+  default-language: Haskell2010
