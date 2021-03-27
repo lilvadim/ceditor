@@ -10,14 +10,17 @@ import System.IO as SysIO
 import Codec.Picture as JP
 import System.Exit
 import Data.Either
+import Data.List
 
 argsCorrectCheck :: [String] -> Bool 
-argsCorrectCheck args = any (\arg -> take 4 arg == "--i:") args && any (\arg -> take 4 arg == "--s:") args && any (\arg -> take 5 arg == "--do:") args
+argsCorrectCheck args = any (\arg -> take 4 arg == "--i:") args && 
+                        any (\arg -> take 4 arg == "--s:") args && 
+                        any (\arg -> take 5 arg == "--do:") args
 
 argsProcessing :: [String] -> (String, String, String)
 argsProcessing args = (drop 4 $ head $ filter (\arg -> take 4 arg == "--i:") args, 
-                    drop 4 $ head $ filter (\arg -> take 4 arg == "--s:") args,
-                    drop 5 $ head $ filter (\arg -> take 5 arg == "--do:") args)
+                       drop 4 $ head $ filter (\arg -> take 4 arg == "--s:") args,
+                       drop 5 $ head $ filter (\arg -> take 5 arg == "--do:") args)
 
 howToUseMessage = "You should run like this: \n> ceditor --i:\"input-file-name.png\" --s:\"save-to-file.png\" --do:modifier-code\n" ++
                    "Tip: If you're sure that files names don't contain space symbol, you could type them without quotes.\n" ++
@@ -52,7 +55,7 @@ main = do
     let inputFile = (\(input, output, mod) -> input) $ argsProcessing args
     let outputFile = (\(input, output, mod) -> output) $ argsProcessing args
     let modifierArg = (\(input, output, mod) -> mod) $ argsProcessing args
-    let outputFormat = dropWhile (/= '.') outputFile 
+    let outputFormat = outputFile \\ dropWhileEnd (/= '.') outputFile 
 
 -- for check
     putStrLn $ "Your input file  is " ++ inputFile
@@ -63,7 +66,7 @@ main = do
             return()
         _ -> return()
     putStrLn $ "Apply it and save to " ++ outputFile
-    putStrLn $ "In " ++ tail outputFormat ++ " format"
+    putStrLn $ "In " ++ outputFormat ++ " format"
 -- for check -end
 
     dynamicImage <- readImage inputFile
@@ -72,21 +75,31 @@ main = do
 
     let modified = case modifierArg of
           "neg" -> negative <$> image 
-          "grayscale" -> grayscale <$> image 
+          "grayscale" -> grayscale <$> image
+          "no-red" -> noRed <$> image  
+          "no-green" -> noGreen <$> image 
+          "no-blue" -> noBlue <$> image 
+          "only-red" -> onlyRed <$> image
+          "only-green" -> onlyGreen <$> image
+          "only-blue" -> onlyBlue <$> image
           'g':'a':'m':'m':'a':'-':x -> gamma (read x::Double) <$> image
           "c" -> image
-          _ -> image
+          _ -> error "Incorrect option in `--do:` argument!"
         
     case modified of 
         Left err -> print err
         Right image -> case outputFormat of
-            ".png" -> savePngImage outputFile $ ImageRGBA8 image
-            ".jpeg" -> saveJpgImage 100 outputFile $ ImageRGBA8 image
-            ".jpg" -> saveJpgImage 100 outputFile $ ImageRGBA8 image 
-            ".bmp" -> saveBmpImage outputFile $ ImageRGBA8 image
-            ".gif" -> case saveGifImage outputFile $ ImageRGBA8 image of 
+            "png" -> savePngImage outputFile $ ImageRGBA8 image
+            "jpeg" -> saveJpgImage 100 outputFile $ ImageRGBA8 image
+            "jpg" -> saveJpgImage 100 outputFile $ ImageRGBA8 image 
+            "bmp" -> saveBmpImage outputFile $ ImageRGBA8 image
+            "gif" -> case saveGifImage outputFile $ ImageRGBA8 image of 
                 Left err -> print err
                 Right good -> return()
-            ".tiff" -> saveTiffImage outputFile $ ImageRGBA8 image
-            _ -> putStrLn "File format did not recognized."
+            "tiff" -> saveTiffImage outputFile $ ImageRGBA8 image
+            _ -> putStrLn $ "File format did not recognized.\n" ++ 
+                            "> --s:\"example.png\"\n" ++ 
+                             "              ^^^^ Don't forget this!"
+
+    putStrLn "Done!"
     exitSuccess
