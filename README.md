@@ -1,3 +1,5 @@
 # ceditor
 
-![poster]https://psv4.userapi.com/c536236/u239105736/docs/d19/4b518f5bbf7f/ceditor-git.png?extra=j-QFd1Nl0zv3KRWFd6wdApS_X4AnAIrqED_bIS8LWU_kvzAMF6LJ3BDwumIPbajWKsXyCRToSxS0LxyCDO_uoAusoNEMqtv7u2TK32yH9wAWv0cW9VxdkxnAdV2DX0UO3gtwDWp2j8yhyv0CITeMqLOb
+The Compact Photo Editor written on Haskell Language.
+Uses JuicyPixels package.
+![ceditor-git](https://user-images.githubusercontent.com/32203382/112720196-7db23d00-8f2f-11eb-82a4-a8d0ad4bf160.png)
