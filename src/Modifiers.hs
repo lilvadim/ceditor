@@ -24,23 +24,25 @@ modifiersList = "Modifiers List (to apply add the argument --do:MODIFIER-CODE)\n
 rounding :: (RealFrac a, Integral b) => a -> b
 rounding a = floor (a + 0.5)
 
-pxMult :: Pixel8 -> Double -> Pixel8
-pxMult p x = rounding $ fromIntegral p * x
+pxify = rounding
 
-pxPow :: Pixel8 -> Double -> Pixel8 
-pxPow p x = rounding $ fromIntegral p ** x
+pxMult :: Pixel8 -> Double -> Double
+pxMult p x = fromIntegral p * x
 
-pxDiv :: Pixel8 -> Double -> Pixel8 
-pxDiv p x = rounding $ fromIntegral p / x
+pxPow :: Pixel8 -> Double -> Double 
+pxPow p x = fromIntegral p ** x
+
+pxDiv :: Pixel8 -> Double -> Double 
+pxDiv p x = fromIntegral p / x
 
 negative :: Image PixelRGBA8 -> Image PixelRGBA8
 negative = pixelMap $ \(PixelRGBA8 r g b a) -> PixelRGBA8 (255 - r) (255 - g) (255 - b) a
 
 grayscale :: Image PixelRGBA8 -> Image PixelRGBA8
 grayscale = pixelMap $ \(PixelRGBA8 r g b a) -> PixelRGBA8 (y r g b) (y r g b) (y r g b) a 
-  where y r g b = pxMult r 0.2126 + pxMult g 0.7152 + pxMult b 0.0722
+  where y r g b = pxify $ pxMult r 0.2126 + pxMult g 0.7152 + pxMult b 0.0722
 
 gamma :: Double  -> Image PixelRGBA8 -> Image PixelRGBA8
 gamma n = pixelMap $ \(PixelRGBA8 r g b a) -> PixelRGBA8 (y r) (y g) (y b) a
-  where y p = ((p `pxDiv` 255) `pxPow` (1/n)) `pxMult` 255
+  where y p = pxify $ (pxDiv p 255 ** (1 / n)) * 255
 
