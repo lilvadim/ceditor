@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 module Modifiers 
     ( modifiersList,
       negative,
@@ -8,30 +9,39 @@ module Modifiers
       noBlue,
       onlyRed,
       onlyGreen,
-      onlyBlue
+      onlyBlue,
+      rotate
     ) where 
 
 import Codec.Picture
+import Codec.Picture.Types
+import Control.Monad.ST
+import Control.Monad
 
 modifiersList = "Modifiers List (to apply add the argument --do:MODIFIER-CODE)\n" ++
                "Filters:\n" ++
                " neg - Negative (Inversion)\n" ++ 
                " grayscale - Grayscale\n" ++ 
                " gamma-N - Gamma Correction (N is your coefficient)\n" ++
-               " aquarel - Aquarelisation\n" ++ 
-               " emboss - Embossing\n" ++
-               " sharp - Increase Sharpness\n" ++
-               " blur - Gaussian Blur\n" ++ 
+              -- " aquarel - Aquarelisation\n" ++ 
+              -- " emboss - Embossing\n" ++
+              -- " sharp - Increase Sharpness\n" ++
+              -- " blur - Gaussian Blur\n" ++ 
                " no-red / no-green / no-blue - Disable Red/Green/Blue Channel\n" ++
                " only-red / only-green / only-blue - Only Red/Green/Blue Channel\n" ++
                "Transformation & Rotation:\n" ++
-               " rotate-N - N Degrees Rotation\n" ++
-               " crop - 2X Zoom\n"
+               " rotate-N - N Degrees Rotation (negative and float numbers supported)\n" 
+              -- " crop - 2X Zoom\n"
 
 rounding :: (RealFrac a, Integral b) => a -> b
 rounding a = floor (a + 0.5)
 
 pxify = rounding
+
+getX = fst 
+getY = snd
+
+toRad deg = deg * (pi/180)
 
 pxMult :: Pixel8 -> Double -> Double
 pxMult p x = fromIntegral p * x
@@ -49,14 +59,23 @@ grayscale :: Image PixelRGBA8 -> Image PixelRGBA8
 grayscale = pixelMap $ \(PixelRGBA8 r g b a) -> PixelRGBA8 (y r g b) (y r g b) (y r g b) a 
   where y r g b = pxify $ pxMult r 0.2126 + pxMult g 0.7152 + pxMult b 0.0722
 
-gamma :: Double  -> Image PixelRGBA8 -> Image PixelRGBA8
+gamma :: Double -> Image PixelRGBA8 -> Image PixelRGBA8
 gamma n = pixelMap $ \(PixelRGBA8 r g b a) -> PixelRGBA8 (y r) (y g) (y b) a
   where y p = pxify $ (pxDiv p 255 ** (1 / n)) * 255
   
-
-
-
-
+rotate :: Double -> Image PixelRGBA8 -> Image PixelRGBA8
+rotate n img@Image {..} = generateImage rotater newW newH
+  where rotater x y = if srcX x y < imageWidth && srcX x y >= 0 && srcY x y < imageHeight && srcY x y >= 0
+                       then pixelAt img (srcX x y) (srcY x y)
+                       else PixelRGBA8 255 255 255 255
+        srcX x y = getX center + rounding (fromIntegral (x - getX newCenter) * cos_ + fromIntegral (y - getY newCenter) * sin_)
+        srcY x y = getY center + rounding (fromIntegral (y - getY newCenter) * cos_ - fromIntegral (x - getX newCenter) * sin_)
+        center = (imageWidth `div` 2, imageHeight `div` 2)
+        newCenter = (newW `div` 2, newH `div` 2)
+        newW = rounding $ abs (fromIntegral imageHeight * sin_) + abs (fromIntegral imageWidth * cos_)
+        newH = rounding $ abs (fromIntegral imageHeight * cos_) + abs (fromIntegral imageWidth * sin_)
+        sin_ = sin (toRad n)
+        cos_ = cos (toRad n)
 
 -- RGB Channels Manipulations
 noRed :: Image PixelRGBA8 -> Image PixelRGBA8

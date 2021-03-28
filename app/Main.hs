@@ -23,14 +23,14 @@ argsProcessing args = (drop 4 $ head $ filter (\arg -> take 4 arg == "--i:") arg
                        drop 5 $ head $ filter (\arg -> take 5 arg == "--do:") args)
 
 howToUseMessage = "You should run like this: \n> ceditor --i:\"input-file-name.png\" --s:\"save-to-file.png\" --do:modifier-code\n" ++
-                   "Tip: If you're sure that files names don't contain space symbol, you could type them without quotes.\n" ++
+                   "Tip: If you're sure that files names doesn't contain space symbols, you could type them without quotes.\n" ++
                    "For modifiers list and other options type this: \n> ceditor --gimme-some"
 
 main :: IO()
 main = do
     args <- getArgs
-    putStrLn "-----> Welcome to VM's CompactEditor 2021 <-----"
-    putStrLn "Written on Haskell Language.\n---------------------------"
+    putStrLn "------------- ceditor. -------------"
+    putStrLn "Written on Haskell Language.\n------------------------------------"
 
     when (null args) $ do 
                         putStrLn "No arguments!"
@@ -40,7 +40,7 @@ main = do
 -- for check
     putStrLn "Arguments are:"
     forM_ args putStrLn
-    putStrLn "---------"
+    putStrLn "---------------------------"
 -- for check -end
 
     when (head args == "--gimme-some") $ do 
@@ -82,21 +82,22 @@ main = do
           "only-red" -> onlyRed <$> image
           "only-green" -> onlyGreen <$> image
           "only-blue" -> onlyBlue <$> image
-          'g':'a':'m':'m':'a':'-':x -> gamma (read x::Double) <$> image
           "c" -> image
+          'g':'a':'m':'m':'a':'-':x -> gamma (read x::Double) <$> image
+          'r':'o':'t':'a':'t':'e':'-':x -> rotate (read x::Double) <$> image
           _ -> error "Incorrect option in `--do:` argument!"
         
     case modified of 
         Left err -> print err
-        Right image -> case outputFormat of
-            "png" -> savePngImage outputFile $ ImageRGBA8 image
-            "jpeg" -> saveJpgImage 100 outputFile $ ImageRGBA8 image
-            "jpg" -> saveJpgImage 100 outputFile $ ImageRGBA8 image 
-            "bmp" -> saveBmpImage outputFile $ ImageRGBA8 image
-            "gif" -> case saveGifImage outputFile $ ImageRGBA8 image of 
+        Right res -> case outputFormat of
+            "png" -> savePngImage outputFile $ ImageRGBA8 res
+            "jpeg" -> saveJpgImage 100 outputFile $ ImageRGBA8 res
+            "jpg" -> saveJpgImage 100 outputFile $ ImageRGBA8 res 
+            "bmp" -> saveBmpImage outputFile $ ImageRGBA8 res
+            "gif" -> case saveGifImage outputFile $ ImageRGBA8 res of 
                 Left err -> print err
                 Right good -> return()
-            "tiff" -> saveTiffImage outputFile $ ImageRGBA8 image
+            "tiff" -> saveTiffImage outputFile $ ImageRGBA8 res
             _ -> putStrLn $ "File format did not recognized.\n" ++ 
                             "> --s:\"example.png\"\n" ++ 
                              "              ^^^^ Don't forget this!"
