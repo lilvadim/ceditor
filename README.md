@@ -2,3 +2,5 @@
 # ceditor
 The Compact Photo Editor written on Haskell Language.
 Uses JuicyPixels package.
+
+Made by Vadim Mostovoy as NSU Project.

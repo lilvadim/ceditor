@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 67aa8dc482bcf52b05aec1d3702602b7ec71e89e82c2bd2ec587e237032f579d
+-- hash: 60318bbc30c6d8adc46f7b2877c0af930c232b917c17faf7c93d78b361d82e11
 
 name:           ceditor
 version:        0.1.0.0
@@ -27,7 +27,6 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
       Modifiers
   other-modules:
       Paths_ceditor
