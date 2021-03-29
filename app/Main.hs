@@ -3,14 +3,14 @@ module Main where
 import Modifiers 
 import Control.Monad as ControlM
 import System.Environment as SysEnv-- arguments
-import System.Directory as SysDir-- files
-import System.IO as SysIO
--- import Data.ByteString as Byte
--- import Data.Binary as Bin
 import Codec.Picture as JP
 import System.Exit
-import Data.Either
 import Data.List
+-- import System.Directory as SysDir -- files
+-- import System.IO as SysIO
+-- import Data.ByteString as Byte
+-- import Data.Binary as Bin
+-- import Data.Either (fromRight)
 
 argsCorrectCheck :: [String] -> Bool 
 argsCorrectCheck args = any (\arg -> take 4 arg == "--i:") args && 
@@ -40,7 +40,7 @@ main = do
 -- for check
     putStrLn "Arguments are:"
     forM_ args putStrLn
-    putStrLn "---------------------------"
+    putStrLn "------------------------------------"
 -- for check -end
 
     when (head args == "--gimme-some") $ do 
@@ -59,12 +59,7 @@ main = do
 
 -- for check
     putStrLn $ "Your input file  is " ++ inputFile
-    putStrLn $ "Chosen optin is " ++ modifierArg
-    case modifierArg of
-        'g':'a':'m':'m':'a':'-':x -> do 
-            putStrLn $ "Coefficient is " ++ x
-            return()
-        _ -> return()
+    putStrLn $ "Chosen option is " ++ modifierArg
     putStrLn $ "Apply it and save to " ++ outputFile
     putStrLn $ "In " ++ outputFormat ++ " format"
 -- for check -end
@@ -83,16 +78,21 @@ main = do
           "only-green" -> onlyGreen <$> image
           "only-blue" -> onlyBlue <$> image
           "c" -> image
-          'g':'a':'m':'m':'a':'-':x -> gamma (read x::Double) <$> image
-          'r':'o':'t':'a':'t':'e':'-':x -> rotate (read x::Double) <$> image
+          'g':'a':'m':'m':'a':'-':x -> gamma (read x :: Double) <$> image
+          'r':'o':'t':'a':'t':'e':'-':x -> rotate (read x :: Double) <$> image
+          'c':'r':'o':'p':'-':x ->  scale (read x :: Double) . crop (read x :: Double) <$> image
           _ -> error "Incorrect option in `--do:` argument!"
-        
+
     case modified of 
         Left err -> print err
         Right res -> case outputFormat of
             "png" -> savePngImage outputFile $ ImageRGBA8 res
-            "jpeg" -> saveJpgImage 100 outputFile $ ImageRGBA8 res
-            "jpg" -> saveJpgImage 100 outputFile $ ImageRGBA8 res 
+            "jpeg" -> do
+                 let toSave = whiteBG res
+                 saveJpgImage 100 outputFile $ ImageRGBA8 toSave
+            "jpg" -> do
+                 let toSave = whiteBG res
+                 saveJpgImage 100 outputFile $ ImageRGBA8 toSave
             "bmp" -> saveBmpImage outputFile $ ImageRGBA8 res
             "gif" -> case saveGifImage outputFile $ ImageRGBA8 res of 
                 Left err -> print err
