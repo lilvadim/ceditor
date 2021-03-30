@@ -14,28 +14,35 @@ module Modifiers
       onlyBlue,
       rotate,
       crop,
-      scale
+      scale,
+      blur,
+      sharpen
     ) where 
 
 import Codec.Picture
 import Codec.Picture.Types 
 import Control.Monad
+import Control.Monad.ST
+import Conversion 
 
--- Helper Functions
+-- Helper Functions and Bindings
+
 modifiersList = "Modifiers List (to apply add the argument --do:MODIFIER-CODE)\n" ++
                "Filters:\n" ++
                " neg - Negative (Inversion)\n" ++ 
                " grayscale - Grayscale\n" ++ 
                " gamma-N - Gamma Correction (N is your coefficient)\n" ++
-              -- " aquarel - Aquarelisation\n" ++ 
-              -- " emboss - Embossing\n" ++
-              -- " sharp - Increase Sharpness\n" ++
-              -- " blur - Gaussian Blur\n" ++ 
                " no-red / no-green / no-blue - Disable Red/Green/Blue Channel\n" ++
                " only-red / only-green / only-blue - Only Red/Green/Blue Channel\n" ++
+              -- " aquarel - Aquarelisation\n" ++ 
+              -- " emboss - Embossing\n" ++
+               " sharpen - Increase Sharpness\n" ++
+               " blur - Gaussian Blur\n" ++ 
                "Transformation & Rotation:\n" ++
                " rotate-N - N Degrees Rotation (negative and float numbers supported)\n" ++
-               " crop-N - Crop image to N% (50% -> 2X zoom effect, 75% -> cut off 25% of image from each side, N > 100% -> white frame)\n"
+               " crop-N - Crop image to N%, resolution also be changing (but minimal quality loss)\n" ++
+               " zoom-N - Crop image to N% without changing resolution (50% -> 2X zoom effect, 75% -> cut off 25% of image from each side, N > 100% -> white frame)\n" ++
+               " scale-N - Scale the image (resolution) to N% (possible quality loss)"
 
 rounding :: (RealFrac a, Integral b) => a -> b
 rounding a = floor (a + 0.5)
@@ -47,13 +54,42 @@ getY = snd
 
 toRad deg = deg * (pi/180)
 
+
+pxMultNumT :: (Double, Double, Double) -> Double -> (Double, Double, Double)
+pxMultNumT (r, g, b) q = (r * q, g * q, b * q)
+
+pxPlusT :: (Double, Double, Double) -> (Double, Double, Double) -> (Double, Double, Double)
+pxPlusT (r1, g1, b1) (r2, g2, b2) = (r1 + r2, g1 + g2, b1 + b2)
+
+fromPixelT :: PixelRGBA8 -> (Double, Double, Double)
+fromPixelT (PixelRGBA8 r g b a) = (fromIntegral r, fromIntegral g, fromIntegral b)
+
+toPixelT :: (Double, Double, Double) -> PixelRGBA8 
+toPixelT (r,g,b) = PixelRGBA8 (fromInteger $ rounding r) (fromInteger $ rounding g) (fromInteger $ rounding b) 255
+
 whiteBG :: Image PixelRGBA8 -> Image PixelRGBA8
 whiteBG = pixelMap $ \px@(PixelRGBA8 r g b a) -> if 
-                                              | a == 0 -> PixelRGBA8 255 255 255 255 
-                                              | a < 255 -> PixelRGBA8 r g b 1
-                                              | otherwise -> px
+                                                  | a == 0 -> whitePx
+                                                  | a < 255 -> PixelRGBA8 r g b 255
+                                                  | otherwise -> px
+
+getR :: PixelRGBA8 -> Pixel8
+getR (PixelRGBA8 r g b a) = r
+
+getG :: PixelRGBA8 -> Pixel8
+getG (PixelRGBA8 r g b a) = g
+
+getB :: PixelRGBA8 -> Pixel8
+getB (PixelRGBA8 r g b a) = b
+
+whitePx :: PixelRGBA8
+whitePx = PixelRGBA8 255 255 255 255
+
+blackPx :: PixelRGBA8 
+blackPx = PixelRGBA8 0 0 0 255
 
 -- Per Pixel Filters
+
 negative :: Image PixelRGBA8 -> Image PixelRGBA8
 negative = pixelMap $ \(PixelRGBA8 r g b a) -> PixelRGBA8 (255 - r) (255 - g) (255 - b) a
 
@@ -65,7 +101,8 @@ gamma :: Double -> Image PixelRGBA8 -> Image PixelRGBA8
 gamma n = pixelMap $ \(PixelRGBA8 r g b a) -> PixelRGBA8 (y r) (y g) (y b) a
   where y p = pxify $ ((fromIntegral p / 255) ** (1 / n)) * 255
 
--- RGB Channels Filters
+-- RGB Channels Filters / халтура)
+
 noRed :: Image PixelRGBA8 -> Image PixelRGBA8
 noRed = pixelMap $ \(PixelRGBA8 r g b a) -> PixelRGBA8 0 g b a
 
@@ -85,11 +122,12 @@ onlyBlue :: Image PixelRGBA8 -> Image PixelRGBA8
 onlyBlue = pixelMap $ \(PixelRGBA8 r g b a) -> PixelRGBA8 0 0 b a
 
 -- Transfromation 
+
 rotate :: Double -> Image PixelRGBA8 -> Image PixelRGBA8
 rotate n img@Image {..} = generateImage rotater newW newH
   where rotater x y = if srcX x y < imageWidth && srcX x y >= 0 && srcY x y < imageHeight && srcY x y >= 0
                        then pixelAt img (srcX x y) (srcY x y)
-                       else PixelRGBA8 255 255 255 255
+                       else whitePx
         srcX x y = getX center + rounding (fromIntegral (x - getX newCenter) * cos' + fromIntegral (y - getY newCenter) * sin')
         srcY x y = getY center + rounding (fromIntegral (y - getY newCenter) * cos' - fromIntegral (x - getX newCenter) * sin')
         center = (imageWidth `div` 2, imageHeight `div` 2)
@@ -103,7 +141,7 @@ crop :: Double -> Image PixelRGBA8 -> Image PixelRGBA8
 crop n img@Image {..} = generateImage cropper newW newH
   where cropper x y = if srcX x < imageWidth && srcX x >= 0 && srcY y < imageHeight && srcY y >= 0
                        then pixelAt img (srcX x) (srcY y)
-                       else PixelRGBA8 255 255 255 255
+                       else whitePx
         newW = rounding $ fromIntegral imageWidth * (n/100)
         newH = rounding $ fromIntegral imageHeight * (n/100)
         srcX x = x + getX origin
@@ -115,40 +153,65 @@ scale :: Double -> Image PixelRGBA8 -> Image PixelRGBA8
 scale n img@Image {..} = generateImage scaler newW newH 
   where scaler x y = if srcX x < imageWidth && srcX x >= 0 && srcY y < imageHeight && srcY y >= 0
                        then pixelAt img (srcX x) (srcY y)
-                       else PixelRGBA8 255 255 255 255
+                       else whitePx
         newW = rounding $ fromIntegral imageWidth * ratio
         newH = rounding $ fromIntegral imageHeight * ratio
         srcX x = floor $ fromIntegral x * (1 / ratio)
         srcY y = floor $ fromIntegral y * (1 / ratio)
-        ratio = 1/ (n/100) 
+        ratio = n/100
 
--- Matriсes Based Filters
+-- Matriсes Convolution Based Filters
+
+blur :: Image PixelRGBA8 -> Image PixelRGBA8 
+blur img@Image {..} = generateImage blurrer imageWidth imageHeight
+       where blurrer x y | x >= (imageWidth - offset) || x < offset
+                          || y >= (imageHeight - offset) || y < offset = whitePx
+                         | otherwise = do
+                let applyKernel i j p | j >= matrixLength = applyKernel (i + 1) 0 p
+                                      | i >= matrixLength = toPixelT p 
+                                      | otherwise = do 
+                                         let outPixelT = pxMultNumT
+                                                          (fromPixelT (pixelAt img (x + j - offset) (y + i - offset)))
+                                                          (kernel !! i !! j)
+                                         applyKernel i (j+1) (outPixelT `pxPlusT` p)
+                applyKernel 0 0 (0,0,0)
+             kernel = [[1  / 255, 4  / 255,  6 / 255,  4 / 255, 1 / 255],
+                       [4  / 255, 16 / 255, 24 / 255, 16 / 255, 4 / 255],
+                       [6  / 255, 24 / 255, 35 / 255, 24 / 255, 6 / 255],
+                       [4  / 255, 16 / 255, 24 / 255, 16 / 255, 4 / 255],
+                       [1  / 255, 4  / 255,  6 / 255,  4 / 255, 1 / 255]]
+             matrixLength = length kernel 
+             offset = matrixLength `div` 2
+             zeroPx = blackPx
+
+sharpen :: Image PixelRGBA8 -> Image PixelRGBA8 
+sharpen img@Image {..} = generateImage blurrer imageWidth imageHeight
+       where blurrer x y | x >= (imageWidth - offset) || x < offset
+                          || y >= (imageHeight - offset) || y < offset = whitePx
+                         | otherwise = do
+                let applyKernel i j p | j >= matrixLength = applyKernel (i + 1) 0 p
+                                      | i >= matrixLength = toPixelT p 
+                                      | otherwise = do 
+                                         let outPixelT = pxMultNumT
+                                                          (fromPixelT (pixelAt img (x + j - offset) (y + i - offset)))
+                                                           (kernel !! i !! j)
+                                         applyKernel i (j+1) (outPixelT `pxPlusT` p)
+                applyKernel 0 0 (0,0,0)
+             kernel = [[   0, -0.5,    0],
+                       [-0.5,    3, -0.5],
+                       [   0, -0.5,    0]]
+             matrixLength = length kernel
+             offset = matrixLength `div` 2
+             
+        
+
+
+
+
 
 
 {-
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-▀█▄░▄█░░░█▄▄▐▀█▀▌▐▀█░▀█░▀█▄░▐▀░ 
-░█▐█▀▐░░▐▄██░░▌░░▐▄▌░░▌░░░██▀░░ 
-░█░▌░▐░░▌▀██░░▌░░▐▀▄░░▌░▐▀░▀█▄░ 
-▄▌░░░▀░▀░░▀▀░▀▀▀░▀░▀▀░▀░▀░░░░▀▀
-░░░░░░░░░░▄▄▄▄▄▄░░░░░░░░░░░░░░░
-░░░░░░░░████▀▀███░░░░░░░░░░░░░░
-░░░░░░░███░░░░░▀██░░░░░░░░░░░░░
-░░░░░░░███▄░▄▄▄▄██░░░░░░░░░░░░░
-░░░░░░░████▀▀████▀░░░░░░░░░░░░░
-░░░░░░░██▄█▄▄░░░░░░░░░░░░░░░░░░
-░░░░░░░░████▄▄░░░░░░░░░░░░░░░░░
-░░░░░░░░░██▀░░▄█▄░░░░░░░░░░░░░░
-░░░░░░░░░████████▄░░░░░░░░░░░░░
-░░░░░░░░░█████████▄▄▄▄░░░░░░░░░
-░░░░░░░░▄████████████████▄▄░░░░
-░░░░░░▄████████████████████░░░░
-░░░▄████████████████████████░░░
-░░██████████████████████████▄░░
-░████████████████████████████░░
-░████████████████████████████░░
-░█████████████████████████████░
-░█████████████████████████████░
-██████████████████████████████░
-        What is the Matrix?
+
+  - What is the Matrix?
+
 -}

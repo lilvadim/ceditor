@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 60318bbc30c6d8adc46f7b2877c0af930c232b917c17faf7c93d78b361d82e11
+-- hash: a00c0c1365717432326633b7525a22ccccc96c748d6f12a2fc5050fb95f66214
 
 name:           ceditor
 version:        0.1.0.0
@@ -37,6 +37,7 @@ library
     , base >=4.7 && <5
     , binary
     , bytestring
+    , conversion
     , directory
   default-language: Haskell2010
 
@@ -53,6 +54,7 @@ executable ceditor-exe
     , binary
     , bytestring
     , ceditor
+    , conversion
     , directory
   default-language: Haskell2010
 
@@ -70,5 +72,6 @@ test-suite ceditor-test
     , binary
     , bytestring
     , ceditor
+    , conversion
     , directory
   default-language: Haskell2010

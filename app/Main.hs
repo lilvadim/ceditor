@@ -77,11 +77,15 @@ main = do
           "only-red" -> onlyRed <$> image
           "only-green" -> onlyGreen <$> image
           "only-blue" -> onlyBlue <$> image
+          "blur" -> blur <$> image
+          "sharpen" -> sharpen <$> image
           "c" -> image
           'g':'a':'m':'m':'a':'-':x -> gamma (read x :: Double) <$> image
           'r':'o':'t':'a':'t':'e':'-':x -> rotate (read x :: Double) <$> image
-          'c':'r':'o':'p':'-':x ->  scale (read x :: Double) . crop (read x :: Double) <$> image
-          _ -> error "Incorrect option in `--do:` argument!"
+          'c':'r':'o':'p':'-':x -> crop (read x :: Double) <$> image
+          'z':'o':'o':'m':'-':x ->  scale ((1 / read x :: Double) * 10000) . crop (read x :: Double) <$> image
+          's':'c':'a':'l':'e':'-':x -> scale (read x :: Double) <$> image
+          _ -> error "Incorrect option after `--do:`!"
 
     case modified of 
         Left err -> print err

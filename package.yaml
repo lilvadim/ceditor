@@ -25,6 +25,7 @@ dependencies:
 - binary
 - bytestring
 - directory
+- conversion
 
 library:
   source-dirs: src
