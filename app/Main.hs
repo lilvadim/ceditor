@@ -4,6 +4,7 @@ import Modifiers
 import Control.Monad as ControlM
 import System.Environment as SysEnv-- arguments
 import Codec.Picture as JP
+import Codec.Picture.Types
 import System.Exit
 import Data.List
 -- import System.Directory as SysDir -- files
@@ -90,18 +91,18 @@ main = do
     case modified of 
         Left err -> print err
         Right res -> case outputFormat of
-            "png" -> savePngImage outputFile $ ImageRGBA8 res
+            "png" -> savePngImage outputFile $ ImageRGBA8 $ promoteImage res
             "jpeg" -> do
                  let toSave = whiteBG res
-                 saveJpgImage 100 outputFile $ ImageRGBA8 toSave
+                 saveJpgImage 100 outputFile $ ImageRGBA8 $ promoteImage toSave
             "jpg" -> do
                  let toSave = whiteBG res
-                 saveJpgImage 100 outputFile $ ImageRGBA8 toSave
-            "bmp" -> saveBmpImage outputFile $ ImageRGBA8 res
-            "gif" -> case saveGifImage outputFile $ ImageRGBA8 res of 
+                 saveJpgImage 100 outputFile $ ImageRGBA8 $ promoteImage toSave
+            "bmp" -> saveBmpImage outputFile $ ImageRGBA8 $ promoteImage res
+            "gif" -> case saveGifImage outputFile $ ImageRGBA8 $ promoteImage res of 
                 Left err -> print err
                 Right good -> return()
-            "tiff" -> saveTiffImage outputFile $ ImageRGBA8 res
+            "tiff" -> saveTiffImage outputFile $ ImageRGBA8 $ promoteImage res
             _ -> putStrLn $ "File format did not recognized.\n" ++ 
                             "> --s:\"example.png\"\n" ++ 
                              "              ^^^^ Don't forget this!"

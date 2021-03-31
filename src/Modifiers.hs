@@ -54,17 +54,23 @@ getY = snd
 
 toRad deg = deg * (pi/180)
 
-pxMultNumT :: (Double, Double, Double) -> Double -> (Double, Double, Double)
+pxMultNumT :: (Float, Float, Float) -> Float -> (Float, Float, Float)
 pxMultNumT (r, g, b) q = (r * q, g * q, b * q)
 
-pxPlusT :: (Double, Double, Double) -> (Double, Double, Double) -> (Double, Double, Double)
+pxPlusT :: (Float, Float, Float) -> (Float, Float, Float) -> (Float, Float, Float)
 pxPlusT (r1, g1, b1) (r2, g2, b2) = (r1 + r2, g1 + g2, b1 + b2)
 
-fromPixelT :: PixelRGBA8 -> (Double, Double, Double)
-fromPixelT (PixelRGBA8 r g b a) = (fromIntegral r, fromIntegral g, fromIntegral b)
+fromPixelT :: PixelRGB8 -> (Float, Float, Float)
+fromPixelT p@(PixelRGB8 r g b) = (getRf $ fp p, getGf $ fp p, getBf $ fp p) 
+  where fp p = promotePixel p 
+        fp :: PixelRGB8 -> PixelRGBF
 
-toPixelT :: (Double, Double, Double) -> PixelRGBA8 
-toPixelT (r,g,b) = PixelRGBA8 (fromInteger $ rounding r) (fromInteger $ rounding g) (fromInteger $ rounding b) 255
+toPixelT :: (Float, Float, Float) -> PixelRGBF
+toPixelT (r,g,b) = PixelRGBF r g b
+
+normalizePixel :: PixelRGBF -> PixelRGB8 
+normalizePixel (PixelRGBF r g b) = PixelRGB8 (n r) (n g) (n b)
+  where n f = floor $ 255 * f
 
 whiteBG :: Image PixelRGBA8 -> Image PixelRGBA8
 whiteBG = pixelMap $ \px@(PixelRGBA8 r g b a) -> if 
@@ -80,6 +86,15 @@ getG (PixelRGBA8 r g b a) = g
 
 getB :: PixelRGBA8 -> Pixel8
 getB (PixelRGBA8 r g b a) = b
+
+getRf :: PixelRGBF -> PixelF
+getRf (PixelRGBF r g b) = r
+
+getGf :: PixelRGBF -> PixelF
+getGf (PixelRGBF r g b) = g
+
+getBf :: PixelRGBF -> PixelF
+getBf (PixelRGBF r g b) = b
 
 whitePx :: PixelRGBA8
 whitePx = PixelRGBA8 255 255 255 255
@@ -162,15 +177,15 @@ scale n img@Image {..} = generateImage scaler newW newH
 -- Matriсes Convolution Based Filters
 
 blur :: Image PixelRGBA8 -> Image PixelRGBA8 
-blur img@Image {..} = generateImage blurrer imageWidth imageHeight
+blur img@Image {..} = promoteImage $ generateImage blurrer imageWidth imageHeight
        where blurrer x y | x >= (imageWidth - offset) || x < offset
-                          || y >= (imageHeight - offset) || y < offset = whitePx
+                          || y >= (imageHeight - offset) || y < offset = PixelRGB8 255 255 255
                          | otherwise = do
                 let applyKernel i j p | j >= matrixLength = applyKernel (i + 1) 0 p
-                                      | i >= matrixLength = toPixelT p 
+                                      | i >= matrixLength = normalizePixel $ toPixelT p :: PixelRGB8
                                       | otherwise = do 
                                          let outPixelT = pxMultNumT
-                                                          (fromPixelT (pixelAt img (x + j - offset) (y + i - offset)))
+                                                          (fromPixelT $ dropTransparency (pixelAt img (x + j - offset) (y + i - offset)))
                                                           (kernel !! i !! j)
                                          applyKernel i (j+1) (outPixelT `pxPlusT` p)
                 applyKernel 0 0 (0,0,0)
@@ -181,20 +196,19 @@ blur img@Image {..} = generateImage blurrer imageWidth imageHeight
                        [1  / 255, 4  / 255,  6 / 255,  4 / 255, 1 / 255]]
              matrixLength = length kernel 
              offset = matrixLength `div` 2
-             zeroPx = blackPx
 
 sharpen :: Image PixelRGBA8 -> Image PixelRGBA8 
-sharpen img@Image {..} = generateImage blurrer imageWidth imageHeight
+sharpen img@Image {..} = promoteImage $ generateImage blurrer imageWidth imageHeight
        where blurrer x y | x >= (imageWidth - offset) || x < offset
-                          || y >= (imageHeight - offset) || y < offset = whitePx
+                          || y >= (imageHeight - offset) || y < offset = PixelRGB8 255 255 255
                          | otherwise = do
                 let applyKernel i j p | j >= matrixLength = applyKernel (i + 1) 0 p
-                                      | i >= matrixLength = toPixelT p 
+                                      | i >= matrixLength = normalizePixel $ toPixelT p :: PixelRGB8
                                       | otherwise = do 
                                          let outPixelT = pxMultNumT
-                                                          (fromPixelT (pixelAt img (x + j - offset) (y + i - offset)))
+                                                          (fromPixelT $ dropTransparency (pixelAt img (x + j - offset) (y + i - offset)))
                                                            (kernel !! i !! j)
-                                         applyKernel i (j+1) (outPixelT `pxPlusT` p)
+                                         applyKernel i (j+1) (pxPlusT outPixelT p)
                 applyKernel 0 0 (0,0,0)
              kernel = [[  0 , -0.5,   0 ],
                        [-0.5,   3 , -0.5],
