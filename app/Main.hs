@@ -80,6 +80,8 @@ main = do
           "only-blue" -> onlyBlue <$> image
           "blur" -> blur <$> image
           "sharpen" -> sharpen <$> image
+          "emboss" -> emboss <$> image
+          "brush" -> brush <$> image
           "c" -> image
           'g':'a':'m':'m':'a':'-':x -> gamma (read x :: Double) <$> image
           'r':'o':'t':'a':'t':'e':'-':x -> rotate (read x :: Double) <$> image
@@ -91,18 +93,18 @@ main = do
     case modified of 
         Left err -> print err
         Right res -> case outputFormat of
-            "png" -> savePngImage outputFile $ ImageRGBA8 $ promoteImage res
+            "png" -> savePngImage outputFile $ ImageRGBA8 res
             "jpeg" -> do
                  let toSave = whiteBG res
-                 saveJpgImage 100 outputFile $ ImageRGBA8 $ promoteImage toSave
+                 saveJpgImage 100 outputFile $ ImageRGBA8 toSave
             "jpg" -> do
                  let toSave = whiteBG res
-                 saveJpgImage 100 outputFile $ ImageRGBA8 $ promoteImage toSave
-            "bmp" -> saveBmpImage outputFile $ ImageRGBA8 $ promoteImage res
-            "gif" -> case saveGifImage outputFile $ ImageRGBA8 $ promoteImage res of 
+                 saveJpgImage 100 outputFile $ ImageRGBA8 toSave
+            "bmp" -> saveBmpImage outputFile $ ImageRGBA8 res
+            "gif" -> case saveGifImage outputFile $ ImageRGBA8 res of 
                 Left err -> print err
                 Right good -> return()
-            "tiff" -> saveTiffImage outputFile $ ImageRGBA8 $ promoteImage res
+            "tiff" -> saveTiffImage outputFile $ ImageRGBA8 res
             _ -> putStrLn $ "File format did not recognized.\n" ++ 
                             "> --s:\"example.png\"\n" ++ 
                              "              ^^^^ Don't forget this!"
