@@ -54,7 +54,6 @@ getY = snd
 
 toRad deg = deg * (pi/180)
 
-
 pxMultNumT :: (Double, Double, Double) -> Double -> (Double, Double, Double)
 pxMultNumT (r, g, b) q = (r * q, g * q, b * q)
 
@@ -197,9 +196,9 @@ sharpen img@Image {..} = generateImage blurrer imageWidth imageHeight
                                                            (kernel !! i !! j)
                                          applyKernel i (j+1) (outPixelT `pxPlusT` p)
                 applyKernel 0 0 (0,0,0)
-             kernel = [[   0, -0.5,    0],
-                       [-0.5,    3, -0.5],
-                       [   0, -0.5,    0]]
+             kernel = [[  0 , -0.5,   0 ],
+                       [-0.5,   3 , -0.5],
+                       [  0 , -0.5,   0 ]]
              matrixLength = length kernel
              offset = matrixLength `div` 2
              
