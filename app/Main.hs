@@ -80,7 +80,7 @@ main = do
           "only-blue" -> onlyBlue <$> image
           "blur" -> blur <$> image
           "sharpen" -> sharpen <$> image
-          "emboss" -> emboss <$> image
+          "emboss" -> grayscale . emboss <$> image
           "brush" -> brush <$> image
           "median" -> median <$> image
           "c" -> image

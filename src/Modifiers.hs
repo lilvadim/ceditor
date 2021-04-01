@@ -212,9 +212,9 @@ sharpen img@Image {..} = promoteImage $ generateImage sharpener imageWidth image
                                                            (kernel !! i !! j)
                                          applyKernel i (j+1) (pxPlus outPixel p)
                 applyKernel 0 0 (PixelRGBF 0 0 0)
-             kernel = [[ 0, -1,  0],
-                       [-1,  5, -1],
-                       [ 0, -1,  0]]
+             kernel = [[ 0,-1, 0],
+                       [-1, 5,-1],
+                       [ 0,-1, 0]]
              matrixLength = length kernel
              offset = matrixLength `div` 2
              
@@ -231,9 +231,9 @@ emboss img@Image {..} = promoteImage $ generateImage sharpener imageWidth imageH
                                                            (kernel !! i !! j)
                                          applyKernel i (j+1) (pxPlus outPixel p)
                 applyKernel 0 0 (PixelRGBF 0 0 0)
-             kernel = [[ 0,  1, 0],
-                       [-1,  0, 1],
-                       [ 0, -1, 0]]
+             kernel = [[0,-1, 0],
+                       [1, 0,-1],
+                       [0, 1, 0]]
              matrixLength = length kernel
              offset = matrixLength `div` 2
 
