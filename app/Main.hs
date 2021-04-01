@@ -82,6 +82,7 @@ main = do
           "sharpen" -> sharpen <$> image
           "emboss" -> emboss <$> image
           "brush" -> brush <$> image
+          "median" -> median <$> image
           "c" -> image
           'g':'a':'m':'m':'a':'-':x -> gamma (read x :: Double) <$> image
           'r':'o':'t':'a':'t':'e':'-':x -> rotate (read x :: Double) <$> image

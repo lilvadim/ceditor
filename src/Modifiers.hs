@@ -18,7 +18,8 @@ module Modifiers
       blur,
       sharpen,
       emboss,
-      brush
+      brush,
+      median
     ) where 
 
 import Codec.Picture
@@ -41,6 +42,7 @@ modifiersList = "Modifiers List (to apply add the argument --do:MODIFIER-CODE)\n
                " emboss - Embossing\n" ++
                " sharpen - Increase Sharpness\n" ++
                " blur - Gaussian Blur\n" ++ 
+               " median - Median Values Filter\n" ++
                "Transformation & Rotation:\n" ++
                " rotate-N - N Degrees Rotation (negative and float numbers supported)\n" ++
                " crop-N - Crop image to N%, resolution also be changing (but minimal quality loss)\n" ++
@@ -236,8 +238,8 @@ emboss img@Image {..} = promoteImage $ generateImage sharpener imageWidth imageH
              offset = matrixLength `div` 2
 
 brush :: Image PixelRGBA8 -> Image PixelRGBA8 
-brush img@Image {..} = promoteImage $ generateImage smooth imageWidth imageHeight
-       where smooth x y | x >= (imageWidth - offset) || x < offset
+brush img@Image {..} = promoteImage $ generateImage brusher imageWidth imageHeight
+       where brusher x y | x >= (imageWidth - offset) || x < offset
                             || y >= (imageHeight - offset) || y < offset = PixelRGB8 255 255 255
                            | otherwise = do
                 let pixelList i j ps | j >= matrixLength = pixelList (i + 1) 0 ps
@@ -247,7 +249,7 @@ brush img@Image {..} = promoteImage $ generateImage smooth imageWidth imageHeigh
                                                 (x + j - offset) 
                                                 (y + i - offset):ps
                 let pxList = pixelList 0 0 []
-                let median = sort pxList !! ceiling (fromIntegral (matrixLength * matrixLength) / 2)
+                let medianValue = sort pxList !! ceiling (fromIntegral (matrixLength * matrixLength) / 2)
                 let applyKernel i j p | j >= matrixLength = applyKernel (i + 1) 0 p
                                       | i >= matrixLength = normalizePixel $ p `pxPlus` PixelRGBF 0.5 0.5 0.5
                                       | otherwise = do 
@@ -255,14 +257,28 @@ brush img@Image {..} = promoteImage $ generateImage smooth imageWidth imageHeigh
                                                           (promotePixel $ dropTransparency $ pixelAt img (x + j - offset) (y + i - offset))
                                                            (kernel !! i !! j)
                                          applyKernel i (j+1) (pxPlus outPixel p)
-                applyKernel 0 0 (promotePixel $ dropTransparency median)
+                applyKernel 0 0 (promotePixel $ dropTransparency medianValue)
              kernel = [[ 0,-1, 0],
                        [-1, 5,-1],
                        [ 0,-1, 0]]
              matrixLength = length kernel
              offset = matrixLength `div` 2
 
-
+median :: Image PixelRGBA8 -> Image PixelRGBA8 
+median img@Image {..} = promoteImage $ generateImage gen imageWidth imageHeight
+       where gen x y | x >= (imageWidth - offset) || x < offset
+                      || y >= (imageHeight - offset) || y < offset = PixelRGB8 255 255 255
+                     | otherwise = do
+                let pixelList i j ps | j >= matrixLength = pixelList (i + 1) 0 ps
+                                     | i >= matrixLength = ps
+                                     | otherwise = pixelList i (j+1) $
+                                              pixelAt img 
+                                                (x + j - offset) 
+                                                (y + i - offset):ps
+                let pxList = pixelList 0 0 []
+                dropTransparency $ sort pxList !! ceiling (fromIntegral (matrixLength * matrixLength) / 2)
+             matrixLength = 3
+             offset = matrixLength `div` 2
 
 
 {-
