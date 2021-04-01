@@ -81,8 +81,8 @@ main = do
           "blur" -> blur <$> image
           "sharpen" -> sharpen <$> image
           "emboss" -> grayscale . emboss <$> image
-          "brush" -> brush <$> image
-          "median" -> median <$> image
+          "brush" -> outlineUp . median 5<$> image
+          "median" -> median 3 <$> image
           "c" -> image
           'g':'a':'m':'m':'a':'-':x -> gamma (read x :: Double) <$> image
           'r':'o':'t':'a':'t':'e':'-':x -> rotate (read x :: Double) <$> image
