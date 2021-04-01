@@ -4,13 +4,13 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f80a8fad29a98461021011fbed8a9e9d34764a1974865d6f51258f3dc5701cfc
+-- hash: 754a7cec0cbca672a72b3d3499e7b419df377d4c3cfda3a0922bcc38306fb778
 
 name:           ceditor
 version:        0.1.0.0
 description:    Please see the README on GitHub at <https://github.com/githubuser/ceditor#readme>
-homepage:       https://github.com/githubuser/ceditor#readme
-bug-reports:    https://github.com/githubuser/ceditor/issues
+homepage:       https://github.com/lilvadim/ceditor#readme
+bug-reports:    https://github.com/lilvadim/ceditor/issues
 author:         Vadim Mostovoy
 maintainer:     example@example.com
 copyright:      2021 VM's
@@ -23,7 +23,7 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/githubuser/ceditor
+  location: https://github.com/lilvadim/ceditor
 
 library
   exposed-modules:
