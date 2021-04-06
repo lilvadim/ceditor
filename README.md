@@ -7,10 +7,10 @@ Made by Vadim Mostovoy as NSU Project.
 
 # Installation
 ```
-Ubutu or Debian based: $ sudo apt install haskell-stack 
-Arch based: $ sudo pacman -S haskell-stack 
-Red Hat based: $ sudo dnf install haskell-stack
-$ stack upgrade 
+Ubutu or Debian based: sudo apt install haskell-stack 
+Arch based: sudo pacman -S haskell-stack 
+Red Hat based: sudo dnf install haskell-stack
+stack upgrade 
 git clone https://github.com/lilvadim/ceditor.git ~/
 cd ~/ceditor
 stack install
