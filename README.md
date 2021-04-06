@@ -4,3 +4,14 @@ The Compact Photo Editor written on Haskell Language.
 Uses JuicyPixels package.
 
 Made by Vadim Mostovoy as NSU Project.
+
+# Installation
+```
+Ubutu or Debian based: $ sudo apt install haskell-stack 
+Arch based: $ sudo pacman -S haskell-stack 
+Red Hat based: $ sudo dnf install haskell-stack
+$ stack upgrade 
+git clone https://github.com/lilvadim/ceditor.git ~/
+cd ~/ceditor
+stack install
+```

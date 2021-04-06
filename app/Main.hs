@@ -14,16 +14,16 @@ import Data.List
 -- import Data.Either (fromRight)
 
 argsCorrectCheck :: [String] -> Bool 
-argsCorrectCheck args = any (\arg -> take 4 arg == "--i:") args && 
-                        any (\arg -> take 4 arg == "--s:") args && 
+argsCorrectCheck args = any (\arg -> take 3 arg == "-i:") args && 
+                        any (\arg -> take 3 arg == "-s:") args && 
                         any (\arg -> take 5 arg == "--do:") args
 
 argsProcessing :: [String] -> (String, String, String)
-argsProcessing args = (drop 4 $ head $ filter (\arg -> take 4 arg == "--i:") args, 
-                       drop 4 $ head $ filter (\arg -> take 4 arg == "--s:") args,
+argsProcessing args = (drop 3 $ head $ filter (\arg -> take 3 arg == "-i:") args, 
+                       drop 3 $ head $ filter (\arg -> take 3 arg == "-s:") args,
                        drop 5 $ head $ filter (\arg -> take 5 arg == "--do:") args)
 
-howToUseMessage = "You should run like this: \n> ceditor --i:\"input-file-name.png\" --s:\"save-to-file.png\" --do:modifier-code\n" ++
+howToUseMessage = "You should run like this: \n> ceditor -i:\"input-file-name.png\" -s:\"save-to-file.png\" --do:modifier-code\n" ++
                    "Tip: If you're sure that files names doesn't contain space symbols, you could type them without quotes.\n" ++
                    "For modifiers list and other options type this: \n> ceditor --gimme-some"
 
@@ -81,8 +81,8 @@ main = do
           "blur" -> blur <$> image
           "sharpen" -> sharpen <$> image
           "emboss" -> grayscale . emboss <$> image
-          "brush" -> outlineUp . median 5 <$> image
-          "median" -> median 3 <$> image
+          "brush" -> sharpen . median <$> image
+          "median" -> median <$> image
           "c" -> image
           'g':'a':'m':'m':'a':'-':x -> gamma (read x :: Double) <$> image
           'r':'o':'t':'a':'t':'e':'-':x -> rotate (read x :: Double) <$> image
@@ -110,5 +110,5 @@ main = do
                             "> --s:\"example.png\"\n" ++ 
                              "              ^^^^ Don't forget this!"
 
-    putStrLn "Done!"
+    putStrLn "Done?"
     exitSuccess

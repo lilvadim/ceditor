@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 754a7cec0cbca672a72b3d3499e7b419df377d4c3cfda3a0922bcc38306fb778
+-- hash: 131aaed18cde3a44bef1c7ef03abd5d0c0cc9a1eee050af1a7bcc59ac57d5b11
 
 name:           ceditor
 version:        0.1.0.0
@@ -42,7 +42,7 @@ library
     , sort
   default-language: Haskell2010
 
-executable ceditor-exe
+executable ceditor
   main-is: Main.hs
   other-modules:
       Paths_ceditor

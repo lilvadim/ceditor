@@ -18,7 +18,6 @@ module Modifiers
       blur,
       sharpen,
       emboss,
-      outlineUp,
       median
     ) where 
 
@@ -31,7 +30,7 @@ import Data.Sort
 
 -- Helper Functions and Bindings
 
-modifiersList = "Modifiers List (to apply add the argument --do:MODIFIER-CODE)\n" ++
+modifiersList = "Modifiers List (to apply add the argument --do:MODIFIER-CODE)\n\n" ++
                "Filters:\n" ++
                " neg - Negative (Inversion)\n" ++ 
                " grayscale - Grayscale\n" ++ 
@@ -42,7 +41,7 @@ modifiersList = "Modifiers List (to apply add the argument --do:MODIFIER-CODE)\n
                " emboss - Embossing\n" ++
                " sharpen - Increase Sharpness\n" ++
                " blur - Gaussian Blur\n" ++ 
-               " median - Median Values Filter\n" ++
+               " median - Median Values Filter\n\n" ++
                "Transformation & Rotation:\n" ++
                " rotate-N - N Degrees Rotation (negative and float numbers supported)\n" ++
                " crop-N - Crop image to N%, resolution also be changing (but minimal quality loss)\n" ++
@@ -237,27 +236,8 @@ emboss img@Image {..} = promoteImage $ generateImage sharpener imageWidth imageH
              matrixLength = length kernel
              offset = matrixLength `div` 2
 
-outlineUp :: Image PixelRGBA8 -> Image PixelRGBA8 
-outlineUp img@Image {..} = promoteImage $ generateImage brusher imageWidth imageHeight
-       where brusher x y | x >= (imageWidth - offset) || x < offset
-                            || y >= (imageHeight - offset) || y < offset = PixelRGB8 255 255 255
-                           | otherwise = do
-                let applyKernel i j p | j >= matrixLength = applyKernel (i + 1) 0 p
-                                      | i >= matrixLength = normalizePixel $ p `pxPlus` PixelRGBF 0.5 0.5 0.5
-                                      | otherwise = do 
-                                         let outPixel = pxMultNum
-                                                          (promotePixel $ dropTransparency $ pixelAt img (x + j - offset) (y + i - offset))
-                                                           (kernel !! i !! j)
-                                         applyKernel i (j+1) (pxPlus outPixel p)
-                applyKernel 0 0 (PixelRGBF 0 0 0)
-             kernel = [[ 0,-1, 0],
-                       [-1, 5,-1],
-                       [ 0,-1, 0]]
-             matrixLength = length kernel
-             offset = matrixLength `div` 2
-
-median :: Int -> Image PixelRGBA8 -> Image PixelRGBA8 
-median n img@Image {..} = promoteImage $ generateImage gen imageWidth imageHeight
+median :: Image PixelRGBA8 -> Image PixelRGBA8 
+median img@Image {..} = promoteImage $ generateImage gen imageWidth imageHeight
        where gen x y | x >= (imageWidth - offset) || x < offset
                       || y >= (imageHeight - offset) || y < offset = PixelRGB8 255 255 255
                      | otherwise = do
@@ -276,7 +256,7 @@ median n img@Image {..} = promoteImage $ generateImage gen imageWidth imageHeigh
                           (sort pxListR !! center)
                           (sort pxListG !! center)
                           (sort pxListB !! center)
-             matrixLength = n
+             matrixLength = 5
              offset = matrixLength `div` 2
 
 -- Dithering 
