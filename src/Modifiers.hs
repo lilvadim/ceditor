@@ -268,9 +268,18 @@ median n img@Image {..} = promoteImage $ generateImage gen imageWidth imageHeigh
                                                 (x + j - offset) 
                                                 (y + i - offset):ps
                 let pxList = pixelList 0 0 []
-                dropTransparency $ sort pxList !! ceiling (fromIntegral (matrixLength * matrixLength) / 2)
+                let pxListR = getR <$> pxList
+                let pxListG = getG <$> pxList
+                let pxListB = getB <$> pxList
+                let center = ceiling (fromIntegral (matrixLength * matrixLength) / 2)
+                PixelRGB8 
+                          (sort pxListR !! center)
+                          (sort pxListG !! center)
+                          (sort pxListB !! center)
              matrixLength = n
              offset = matrixLength `div` 2
 
 -- Dithering 
 
+ordDither :: Image PixelRGBA8 -> Image PixelRGBA8 
+ordDither = undefined
