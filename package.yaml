@@ -27,6 +27,8 @@ dependencies:
 - directory
 - conversion
 - sort
+- gloss
+- gloss-juicy
 
 library:
   source-dirs: src

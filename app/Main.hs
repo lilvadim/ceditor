@@ -1,12 +1,15 @@
 module Main where
 
 import Modifiers 
-import Control.Monad as ControlM
-import System.Environment as SysEnv-- arguments
-import Codec.Picture as JP
+import Control.Monad (unless, forM_, when)
+import System.Environment-- arguments
+import Codec.Picture as Juicy
 import Codec.Picture.Types
-import System.Exit
-import Data.List
+import System.Exit (ExitCode(ExitFailure), exitSuccess, exitWith )
+import Data.List ((\\), dropWhileEnd)
+import Graphics.Gloss.Juicy (fromImageRGBA8)
+import Graphics.Gloss (display, Display (..))
+import Graphics.Gloss.Data.Color (makeColorI)
 -- import System.Directory as SysDir -- files
 -- import System.IO as SysIO
 -- import Data.ByteString as Byte
@@ -83,6 +86,8 @@ main = do
           "emboss" -> grayscale . emboss <$> image
           "brush" -> sharpen . median <$> image
           "median" -> median <$> image
+          "sobel" -> sobel . grayscale <$> image 
+          "floyd-dither" -> fsDither 3 3 3 <$> image
           "c" -> image
           'g':'a':'m':'m':'a':'-':x -> gamma (read x :: Double) <$> image
           'r':'o':'t':'a':'t':'e':'-':x -> rotate (read x :: Double) <$> image
@@ -90,6 +95,17 @@ main = do
           'z':'o':'o':'m':'-':x ->  scale ((1 / read x :: Double) * 10000) . crop (read x :: Double) <$> image
           's':'c':'a':'l':'e':'-':x -> scale (read x :: Double) <$> image
           _ -> error "Incorrect option after `--do:`!"
+
+    when (elem "--show" args) $ do 
+        case modified of
+         Left err -> print err
+         Right res -> do
+                       display 
+                        (InWindow "ceditor. Image Preview" (1280, 720) (10, 10))
+                        (makeColorI 255 255 255 255)
+                        (fromImageRGBA8 res)
+                       return() 
+         
 
     case modified of 
         Left err -> print err
