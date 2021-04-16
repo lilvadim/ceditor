@@ -311,41 +311,41 @@ ordDither :: Image PixelRGBA8 -> Image PixelRGBA8
 ordDither = undefined
 
 fsDither :: Int -> Int -> Int -> Image PixelRGBA8 -> Image PixelRGBA8
-fsDither redPalette greenPalette bluePalette img@Image {..} = promoteImage $ runST $ do
+fsDither redPalette greenPalette bluePalette img@Image {..} = runST $ do
   mutImg <- thawImage img
   let go x y
-        | x >= imageWidth - 2 = go 2 (y + 1)
-        | y >= imageHeight - 2 = unsafeFreezeImage mutImg
+        | x >= imageWidth - 1 = go 1 (y + 1)
+        | y >= imageHeight - 1 = unsafeFreezeImage mutImg
         | otherwise = do
             oldPixel <- readPixel mutImg x y
             let oldPixelT = fromPixelT oldPixel
             let findClosestPaletteColor (r, g, b, _) = (
-                  fromIntegral $ rounding $ (r * (fromIntegral redPalette - 1) / 255) * 255 / (fromIntegral redPalette - 1),
-                  fromIntegral $ rounding $ (g * (fromIntegral greenPalette - 1) / 255) * 255 / (fromIntegral greenPalette - 1),
-                  fromIntegral $ rounding $ (b * (fromIntegral bluePalette - 1) / 255) * 255 / (fromIntegral bluePalette - 1), 255
-                  )
+                  (r * (fromIntegral redPalette - 1) / 255) * 255 / (fromIntegral redPalette - 1),
+                  (g * (fromIntegral greenPalette - 1) / 255) * 255 / (fromIntegral greenPalette - 1),
+                  (b * (fromIntegral bluePalette - 1) / 255) * 255 / (fromIntegral bluePalette - 1), 255
+                 )
             let newPixelT = findClosestPaletteColor oldPixelT
-            let newPixel = normalizePixelT oldPixelT
+            let newPixel = normalizePixelT newPixelT
             writePixel mutImg x y newPixel
-            let quantErr = pxPlusT oldPixelT (newPixelT `pxMultNumT` (-1))
+            let quantErr = pxPlusT oldPixelT (pxMultNumT newPixelT (-1))
 
             pixel1 <- readPixel mutImg (x + 1) y
-            let newPixel2 = normalizePixelT $ findClosestPaletteColor $ pxPlusT (pxMultNumT quantErr (7/16)) (fromPixelT pixel1)
-            writePixel mutImg (x + 1) y newPixel2
+            let newPixel1 = normalizePixelT $ pxPlusT (pxMultNumT quantErr (7/16)) (fromPixelT pixel1)
+            writePixel mutImg (x + 1) y newPixel1
 
             pixel2 <- readPixel mutImg (x - 1) (y + 1)
-            let newPixel3 = normalizePixelT $ findClosestPaletteColor $ pxPlusT (pxMultNumT quantErr (3/16)) (fromPixelT pixel2)
-            writePixel mutImg (x - 1) (y + 1) newPixel3
+            let newPixel2 = normalizePixelT $ pxPlusT (pxMultNumT quantErr (3/16)) (fromPixelT pixel2)
+            writePixel mutImg (x - 1) (y + 1) newPixel2
 
             pixel3 <- readPixel mutImg x (y + 1)
-            let newPixel4 = normalizePixelT $ findClosestPaletteColor $ pxPlusT (pxMultNumT quantErr (5/16)) (fromPixelT pixel3)
-            writePixel mutImg x (y + 1) newPixel4
+            let newPixel3 = normalizePixelT $ pxPlusT (pxMultNumT quantErr (5/16)) (fromPixelT pixel3)
+            writePixel mutImg x (y + 1) newPixel3
 
             pixel4 <- readPixel mutImg (x + 1) (y + 1)
-            let newPixel5 = normalizePixelT $ findClosestPaletteColor $ pxPlusT (pxMultNumT quantErr (1/16)) (fromPixelT pixel4)
-            writePixel mutImg (x + 1) (y + 1) newPixel5
+            let newPixel4 = normalizePixelT $ pxPlusT (pxMultNumT quantErr (1/16)) (fromPixelT pixel4)
+            writePixel mutImg (x + 1) (y + 1) newPixel4
             go (x + 1) y
-  go 2 2
+  go 1 1
 
 
 
